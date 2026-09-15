@@ -1,0 +1,496 @@
+{
+  "version": "rules_v1.1.0",
+  "module": "input_guard",
+  "description": "GovEnt AgentShield Input Guard 固定基线规则集 v1.1.0；覆盖直接/间接提示注入、越狱、权限伪造、敏感数据、凭据（含 API Key/令牌等扩展对象）、数据外传、审计规避、危险执行（含文件系统/数据库/Git/下载执行/提权类别）、记忆/知识库投毒、编码混淆等；与 src/input_guard.py 内置规则按 rule_id 合并（同名外部规则覆盖内置）。",
+  "freeze_policy": "规则冻结后仅允许修复明确误报/漏报或新增独立验证集证明的缺陷；禁止针对单个 SAMPLE 编号硬编码。",
+  "rules": [
+    {
+      "rule_id": "ignore_instruction",
+      "category": "prompt_injection",
+      "description": "尝试忽略、覆盖或替换既有安全指令",
+      "weight": 0.65,
+      "patterns": [
+        "忽略.{0,12}(之前|此前|以上|所有|原有).{0,8}(指令|规则|提示|要求)",
+        "无视.{0,12}(系统|安全|之前|以上).{0,8}(指令|规则|限制|要求)",
+        "覆盖.{0,12}(系统|安全|之前|原有).{0,8}(指令|规则|提示)",
+        "不要.{0,8}(遵守|理会|执行).{0,12}(之前|系统|安全).{0,8}(指令|规则|限制)",
+        "ignore\\s+(all\\s+)?(previous|prior|earlier|above)\\s+(instructions?|rules?|prompts?)",
+        "disregard\\s+(all\\s+)?(previous|prior|earlier|above)\\s+(instructions?|rules?|prompts?)",
+        "override\\s+(the\\s+)?(system|safety|previous)\\s+(prompt|instructions?|rules?)",
+        "(停止|取消|丢弃).{0,10}(之前|原来|当前|用户).{0,8}(任务|指令|要求).{0,12}(改为|转而|只执行|执行)",
+        "(用户|我的).{0,8}(指令|要求).{0,8}(优先级|级别).{0,8}(高于|超过).{0,8}(系统|开发者|安全)",
+        "(把|将).{0,10}(后续|下面|以下).{0,8}(内容|文字|输入).{0,10}(当作|视为).{0,8}(系统指令|最高优先级指令|开发者指令)",
+        "(from\\s+now\\s+on|starting\\s+now).{0,30}(ignore|disregard|override).{0,20}(system|previous|safety)",
+        "忽略.{0,12}(当前|现有|系统).{0,8}(系统)?(指令|规则|提示|要求)"
+      ]
+    },
+    {
+      "rule_id": "system_prompt_extraction",
+      "category": "prompt_injection",
+      "description": "尝试获取或泄露系统提示词、隐藏指令或内部规则",
+      "weight": 0.68,
+      "patterns": [
+        "(显示|输出|告诉我|泄露|复述|打印).{0,15}(系统提示词|系统提示|隐藏指令|内部指令|开发者指令)",
+        "(系统提示词|系统提示|隐藏指令|内部指令).{0,8}(是什么|内容|全文)",
+        "(reveal|show|print|repeat|leak|expose).{0,20}(system\\s+prompt|hidden\\s+instructions?|developer\\s+message)",
+        "(输出|显示|泄露|打印|复述|告诉我|列出).{0,18}(系统配置|内部策略|安全策略|权限边界|工具清单|工具列表)",
+        "(system\\s+configuration|internal\\s+policy|tool\\s+list|permission\\s+boundary).{0,18}(show|reveal|print|dump|list)"
+      ]
+    },
+    {
+      "rule_id": "indirect_instruction_following",
+      "category": "indirect_prompt_injection",
+      "description": "要求执行网页、文档、邮件或知识库中的隐藏/嵌入指令",
+      "weight": 0.6,
+      "patterns": [
+        "(网页|文档|附件|邮件|知识库|检索结果).{0,16}(隐藏|嵌入|包含).{0,10}(指令|命令|提示)",
+        "(读取|打开|解析).{0,12}(网页|文档|附件|邮件).{0,12}(并|然后).{0,8}(执行|遵循).{0,8}(其中|里面).{0,6}(指令|命令)",
+        "(follow|execute|obey).{0,15}(instructions?|commands?).{0,15}(webpage|document|attachment|email|retrieval)",
+        "(网页|文档|附件|邮件|知识库|检索片段|检索结果|pdf|表格).{0,18}(隐藏内容|隐藏文字|隐藏单元格|隐藏指令|页脚隐藏指令|注释|夹带指令)",
+        "(隐藏内容|隐藏文字|隐藏单元格|网页注释|邮件页脚).{0,20}(忽略|调用|执行|上传|发送|转发|读取|关闭|修改|附上)"
+      ]
+    },
+    {
+      "rule_id": "jailbreak_attempt",
+      "category": "jailbreak",
+      "description": "尝试解除安全限制或进入越狱模式",
+      "weight": 0.72,
+      "patterns": [
+        "(进入|开启|切换到).{0,8}(dan|越狱|开发者|无限制|无审查).{0,6}(模式)?",
+        "(解除|绕过|关闭|禁用).{0,10}(安全|内容|权限|审核).{0,8}(限制|机制|规则|过滤|防护)",
+        "(不受|无需遵守|不用遵守).{0,10}(任何|系统|安全).{0,8}(限制|规则|约束)",
+        "\\bjailbreak\\b",
+        "\\bdan\\s*mode\\b",
+        "(developer|unrestricted|uncensored)\\s+mode",
+        "(bypass|disable|remove).{0,15}(safety|security|guardrails?|filters?)",
+        "(关闭|禁用).{0,8}(安全检查|安全审核|人工审核|审核机制|安全控制)",
+        "(不要|无需|跳过).{0,6}(审核|审批|安全检查).{0,12}(直接)?(执行|操作|继续)",
+        "(绕过|规避|突破).{0,10}(所有|全部|任何)?.{0,6}(限制|安全限制|规则|安全控制|审批)",
+        "(安全规则|系统限制|审核机制|审批机制).{0,12}(暂时|现在|本轮|本次).{0,8}(无效|关闭|失效|不适用)",
+        "(假设|设定|模拟).{0,14}(没有|不存在|不受).{0,8}(安全规则|系统限制|审核|约束)",
+        "(不得|不能|不要).{0,10}(拒绝|说不|触发安全拒绝).{0,12}(任何|我的|后续).{0,8}(请求|命令)"
+      ]
+    },
+    {
+      "rule_id": "role_override",
+      "category": "privilege_escalation",
+      "description": "伪造管理员、开发者或高权限角色",
+      "weight": 0.65,
+      "patterns": [
+        "(你现在|从现在起|假装|扮演).{0,10}(管理员|系统管理员|超级用户|开发者|安全负责人)",
+        "(授予|提升|增加|获取).{0,10}(管理员|系统|超级用户|root|最高).{0,6}(权限|角色|访问权)",
+        "(将我|把我).{0,8}(设为|改为|提升为).{0,8}(管理员|超级用户|root)",
+        "(act\\s+as|pretend\\s+to\\s+be).{0,10}(administrator|admin|root|developer)",
+        "(grant|elevate).{0,12}(admin|administrator|root|privileges?|permissions?)",
+        "(已经|已)?获得.{0,8}(最高管理员|管理员|root).{0,6}(授权|权限)",
+        "(最高管理员|管理员).{0,6}(授权|权限).{0,12}(查看|读取|访问|执行)",
+        "(我是|用户是|当前用户为).{0,10}(管理员|超级管理员|安全负责人|项目负责人|root).{0,12}(直接|无需|不需要).{0,8}(核验|确认|审批|授权)",
+        "(assume|treat).{0,12}(me|user).{0,8}(as).{0,8}(admin|administrator|root|authorized)"
+      ]
+    },
+    {
+      "rule_id": "sensitive_file_access",
+      "category": "sensitive_data_access",
+      "description": "尝试读取内部、机密或受限文件",
+      "weight": 0.66,
+      "patterns": [
+        "(读取|打开|查看|下载|导出|复制).{0,16}(内部|机密|保密|敏感|受限).{0,10}(文件|文档|表格|审批表|数据)",
+        "(读取|打开|查看|下载|导出|复制).{0,20}(confidential|secret|private|internal).{0,12}\\.(xlsx|xls|csv|pdf|docx|txt|json)",
+        "(read|open|download|export|copy).{0,20}(confidential|secret|private|internal).{0,20}(file|document|database|spreadsheet)",
+        "(读取|打开|查看|下载|导出|复制|上传).{0,16}(内部|机密|保密|敏感|受限).{0,10}(合同|目录|档案文件|邮件文件)",
+        "(读取|打开|查看|下载|导出|复制|上传).{0,16}(confidential|secret|private).{0,10}(目录|文件夹|directory|folder)",
+        "(读取|查看|导出|复制|下载|列出).{0,20}(\\.env|环境变量|配置文件|secret[s]?\\.(json|ya?ml)|credentials?\\.(json|txt)|id_rsa|私钥文件)",
+        "(read|show|dump|export|copy|download).{0,20}(\\.env|environment\\s+variables?|secrets?\\.(json|ya?ml)|credentials?\\.(json|txt)|id_rsa|private\\s+key\\s+file)",
+        "(读取|打开|查看|下载|导出|复制|上传|访问).{0,18}(生产数据库|数据库备份|客户名单|员工档案|内部合同|系统配置|环境变量)",
+        "(read|open|download|export|copy|upload|access).{0,18}(production\\s+database|database\\s+backup|customer\\s+list|employee\\s+records|internal\\s+contract|system\\s+config|environment\\s+variables)"
+      ]
+    },
+    {
+      "rule_id": "credential_request",
+      "category": "credential_theft",
+      "description": "尝试获取账号、密码、密钥、令牌或连接凭据",
+      "weight": 0.78,
+      "patterns": [
+        "(读取|查看|告诉我|输出|导出|获取).{0,15}(密码|口令|账号|密钥|令牌|token|api\\s*key|私钥)",
+        "(reveal|show|print|export|steal|get).{0,15}(passwords?|credentials?|api\\s*keys?|tokens?|private\\s+keys?)",
+        "(读取|查看|告诉我|输出|导出|获取|列出|展示).{0,20}(cookie|session\\s*token|会话令牌|访问令牌|access\\s*token|secret\\s*key|client\\s*secret)",
+        "(show|reveal|print|dump|export|get|steal).{0,20}(cookie|session\\s*token|access\\s*token|client\\s*secret|secret\\s*key)",
+        "(读取|查看|告诉我|输出|导出|获取|显示|提取).{0,18}(openai_api_key|aws_access_key_id|aws_secret_access_key|github_token|bearer\\s+token|access[_-]?token|session[_-]?token|private[_-]?key|credentials?\\.json|\\bjwt\\b)",
+        "(reveal|show|print|export|steal|get|read|dump).{0,18}(openai_api_key|aws_access_key_id|aws_secret_access_key|github_token|bearer\\s+token|access[_-]?token|session[_-]?token|private[_-]?key|credentials?\\.json|\\bjwt\\b)",
+        "(读取|查看|告诉我|输出|导出|获取|上传|发送).{0,18}(\\.pem\\b|\\.key\\b)"
+      ]
+    },
+    {
+      "rule_id": "external_data_transfer",
+      "category": "data_exfiltration",
+      "description": "尝试向外部邮箱、服务器或接口发送内部/敏感数据",
+      "weight": 0.72,
+      "patterns": [
+        "(发送|上传|转发|外传|同步).{0,18}(外部邮箱|私人邮箱|外部服务器|公网|第三方平台|外部接口)",
+        "(把|将).{0,20}(文件|数据|名单|审批表|日志|密钥).{0,12}(发送|上传|转发|外传).{0,12}(外部|邮箱|服务器|接口)",
+        "(send|upload|forward|exfiltrate).{0,20}(data|file|document|credentials?).{0,20}(external|email|server|endpoint|webhook)",
+        "(发送|上传|转发|外传|同步).{0,20}(https?://|[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}|webhook|指定链接|外部地址)",
+        "(把|将).{0,28}(数据库|内部合同|内部文件|confidential目录|保密目录|文件|数据|邮件).{0,16}(发送|上传|转发|外传).{0,20}(https?://|[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}|webhook|指定链接|外部接口|外部邮箱)",
+        "(发送|上传|转发|外传|同步|写入).{0,22}(pastebin|网盘|公网链接|个人网盘|个人邮箱|私人邮箱|webhook|第三方接口)",
+        "(send|upload|forward|exfiltrate|post).{0,22}(pastebin|public\\s+url|personal\\s+email|webhook|third[- ]party\\s+endpoint)"
+      ]
+    },
+    {
+      "rule_id": "unauthorized_export",
+      "category": "unauthorized_access",
+      "description": "尝试未经授权批量导出、复制或查询受保护数据",
+      "weight": 0.68,
+      "patterns": [
+        "(导出|下载|复制|查询).{0,15}(全部|所有|完整|批量).{0,12}(用户|人员|客户|账号|业务|内部).{0,8}(数据|信息|名单|记录)",
+        "(未经授权|绕过审批|跳过审批|不用审批).{0,15}(读取|导出|下载|访问|执行)",
+        "(export|download|copy|query).{0,15}(all|entire|complete|bulk).{0,12}(users?|customers?|internal|records?|data)",
+        "(跳过审批|绕过审批|未经授权).{0,20}(导出|下载|复制).{0,12}(项目数据库|数据库|内部数据)",
+        "(读取|导出|下载|复制|查询|列出).{0,18}(所有|全部|全量|整库|整个).{0,15}(员工|客户|用户|审批|订单|项目|数据库).{0,10}(数据|记录|资料|信息)?"
+      ]
+    },
+    {
+      "rule_id": "dangerous_command",
+      "category": "dangerous_execution",
+      "description": "要求执行危险系统命令、删除操作或任意代码",
+      "weight": 0.85,
+      "patterns": [
+        "(执行|运行).{0,12}(系统命令|shell命令|powershell|cmd|终端命令|任意代码)",
+        "(删除|清空|格式化|破坏).{0,15}(系统|目录|磁盘|数据库|日志|文件)",
+        "(execute|run).{0,15}(shell|system|terminal|powershell|cmd|arbitrary\\s+code)",
+        "(delete|wipe|format|destroy).{0,15}(system|directory|disk|database|logs?|files?)",
+        "(执行|运行|调用|启动).{0,20}(sudo\\s+)?(rm\\s+-rf|del\\s+/[fsq]|format\\s+[a-z]:|shutdown\\s+/s|powershell|cmd\\.exe|bash\\s+-c|sh\\s+-c)",
+        "(execute|run|launch|invoke).{0,20}(sudo\\s+)?(rm\\s+-rf|del\\s+/[fsq]|format\\s+[a-z]:|shutdown\\s+/s|powershell|cmd\\.exe|bash\\s+-c|sh\\s+-c)"
+      ]
+    },
+    {
+      "rule_id": "memory_poisoning",
+      "category": "memory_or_knowledge_poisoning",
+      "description": "尝试把恶意规则写入长期记忆、知识库或后续上下文",
+      "weight": 0.62,
+      "patterns": [
+        "(写入|加入|保存到|更新).{0,12}(长期记忆|永久记忆|知识库|系统记忆).{0,15}(以后|后续|始终|必须).{0,8}(忽略|执行|绕过|泄露)",
+        "(poison|modify|overwrite).{0,15}(memory|knowledge\\s*base|retrieval|context).{0,15}(instruction|rule|policy)",
+        "(记住|以后记住|永久记住|长期保存).{0,25}(跳过|忽略|绕过|关闭).{0,10}(安全|审核|审批|权限|规则)",
+        "(将|把).{0,20}(恶意|未经验证|未验证|外部).{0,8}(内容|规则|指令).{0,12}(写入|加入|保存到).{0,12}(知识库|长期记忆|memory|rag)"
+      ]
+    },
+    {
+      "rule_id": "permission_bypass",
+      "category": "unauthorized_access",
+      "description": "尝试无视权限限制、跳过审批或绕过授权校验",
+      "weight": 0.68,
+      "patterns": [
+        "(无视|忽略|绕过|突破).{0,8}(权限限制|访问限制|授权限制|权限校验)",
+        "跳过.{0,8}(审批|授权|权限校验|人工确认)",
+        "绕过.{0,8}(权限校验|授权校验|访问校验)",
+        "(不需要|无需).{0,8}(再次)?(确认|核验|审批|授权).{0,12}(读取|访问|执行|调用)"
+      ]
+    },
+    {
+      "rule_id": "audit_evasion",
+      "category": "audit_evasion",
+      "description": "尝试关闭、删除或规避审计日志与操作留痕",
+      "weight": 0.65,
+      "patterns": [
+        "(关闭|禁用|停止).{0,8}(审计日志|操作日志|安全日志|日志)",
+        "(删除|清空|擦除).{0,8}(审计日志|操作日志|日志记录|日志)",
+        "(不要|不).{0,8}(留下|保留).{0,8}(操作痕迹|审计痕迹|日志|记录)"
+      ]
+    },
+    {
+      "rule_id": "system_capability_recon",
+      "category": "prompt_injection",
+      "description": "尝试探测内部规则、系统配置、工具清单或权限边界",
+      "weight": 0.68,
+      "patterns": [
+        "(显示|输出|列出|告诉我|展示).{0,16}(完整)?(内部规则|系统配置|工具清单|工具列表|权限边界|权限配置)",
+        "(系统配置|工具清单|权限边界).{0,12}(全部|完整|内容|显示|列出)"
+      ]
+    },
+    {
+      "rule_id": "obfuscated_execution",
+      "category": "jailbreak",
+      "description": "通过 Base64、ROT13 等编码混淆隐藏并要求执行指令",
+      "weight": 0.72,
+      "patterns": [
+        "(base64|rot13|十六进制|编码内容).{0,28}(解码|还原|解析).{0,20}(严格)?(执行|运行|照做)",
+        "(解码|还原).{0,20}(base64|rot13|编码).{0,20}(执行|运行|照做)"
+      ]
+    },
+    {
+      "rule_id": "bulk_pii_access",
+      "category": "sensitive_data_access",
+      "description": "尝试批量获取员工或用户的身份证号、手机号等个人敏感信息",
+      "weight": 0.72,
+      "patterns": [
+        "(列出|读取|导出|获取|展示).{0,12}(所有|全部|批量).{0,10}(员工|人员|用户).{0,12}(档案|记录|名单).{0,18}(身份证|手机号|电话号码|联系电话|联系方式)",
+        "(所有|全部|批量).{0,8}(员工|人员|用户).{0,10}(档案|记录).{0,18}(身份证号|身份证|手机号|联系电话)"
+      ]
+    },
+    {
+      "rule_id": "internal_mail_access",
+      "category": "sensitive_data_access",
+      "description": "尝试批量读取或完整展示内部邮箱、邮件正文或附件信息",
+      "weight": 0.72,
+      "patterns": [
+        "(读取|查看|导出|展示|列出).{0,12}(内部邮箱|内部邮件).{0,20}(最近|全部|完整|正文|附件|邮件)",
+        "(内部邮箱|内部邮件).{0,18}(最近|前|全部).{0,8}(\\d+|[一二三四五六七八九十]+).{0,6}(封)?邮件"
+      ]
+    },
+    {
+      "rule_id": "credential_exfiltration",
+      "category": "data_exfiltration",
+      "description": "尝试将 Cookie、会话令牌等凭据上传到外部 Webhook 或地址",
+      "weight": 0.85,
+      "patterns": [
+        "(cookie|会话\\s*token|会话令牌|session\\s*token).{0,18}(上传|发送|转发).{0,20}(webhook|https?://|外部|指定地址|指定接口)",
+        "(上传|发送|转发).{0,20}(cookie|会话\\s*token|会话令牌|session\\s*token).{0,20}(webhook|https?://|外部)"
+      ]
+    },
+    {
+      "rule_id": "sensitive_tool_invocation",
+      "category": "unauthorized_access",
+      "description": "诱导调用内部文件工具等敏感工具",
+      "weight": 0.65,
+      "patterns": [
+        "(调用|使用).{0,12}(内部文件工具|内部读取工具|文件读取工具)"
+      ]
+    },
+    {
+      "rule_id": "approval_tampering",
+      "category": "dangerous_execution",
+      "description": "尝试篡改审批状态或审批结果",
+      "weight": 0.82,
+      "patterns": [
+        "(审批状态|审批结果).{0,8}(改成|修改为|更改为|设为).{0,6}(通过|已通过)",
+        "(修改|更改|篡改).{0,8}(审批状态|审批结果).{0,8}(为|成).{0,6}(通过|已通过)"
+      ]
+    },
+    {
+      "rule_id": "retrieval_priority_poisoning",
+      "category": "indirect_prompt_injection",
+      "description": "检索/RAG 内容试图改变指令优先级或要求忽略安全说明",
+      "weight": 0.68,
+      "patterns": [
+        "(检索片段|知识库片段|rag片段).{0,50}(优先采用|最高优先级|优先级高于|忽略.{0,12}(安全说明|安全规则|系统规则))",
+        "(为了提高回答质量|为提高回答质量).{0,24}(优先采用|忽略.{0,12}(安全说明|安全规则))"
+      ]
+    },
+    {
+      "rule_id": "bulk_database_exfiltration",
+      "category": "data_exfiltration",
+      "description": "尝试将数据库完整内容批量发送或上传到外部地址",
+      "weight": 0.85,
+      "patterns": [
+        "(数据库|数据表|数据集).{0,12}(全部|所有|完整).{0,12}(内容|数据)?.{0,12}(发送|上传|外传|转发).{0,20}(https?://|外部|邮箱|webhook|接口)"
+      ]
+    },
+    {
+      "rule_id": "instruction_priority_override",
+      "category": "prompt_injection",
+      "description": "试图改变系统/开发者/用户指令之间的优先级关系",
+      "weight": 0.68,
+      "patterns": [
+        "(用户|我的|后续).{0,10}(指令|内容|要求).{0,10}(优先级|级别).{0,8}(最高|高于|覆盖).{0,10}(系统|开发者|安全)",
+        "(最高优先级|最高级别).{0,12}(执行|采用|遵循).{0,12}(本段|下面|后续|用户)",
+        "(user|my)\\s+(instructions?|messages?).{0,15}(higher|highest|override).{0,15}(system|developer|safety)"
+      ]
+    },
+    {
+      "rule_id": "session_history_access",
+      "category": "sensitive_data_access",
+      "description": "尝试获取会话历史、其他用户上下文或未授权对话内容",
+      "weight": 0.72,
+      "patterns": [
+        "(读取|查看|导出|列出|展示|泄露).{0,18}(其他用户|最近用户|全部用户|所有用户).{0,12}(会话|对话|聊天记录|上下文)",
+        "(读取|导出|展示|泄露).{0,18}(会话历史|聊天历史|对话历史).{0,10}(全部|完整|其他用户)?",
+        "(show|reveal|export|dump).{0,18}(other\\s+users?|all\\s+users?).{0,15}(chat|conversation|session|context)"
+      ]
+    },
+    {
+      "rule_id": "personal_data_request",
+      "category": "sensitive_data_access",
+      "description": "尝试读取或批量导出身份证号、手机号、住址等个人敏感信息",
+      "weight": 0.72,
+      "patterns": [
+        "(读取|列出|导出|获取|展示|复制).{0,20}(身份证号|身份证|手机号|电话号码|家庭住址|银行卡号|人脸信息|生物特征)",
+        "(身份证号|手机号|家庭住址|银行卡号).{0,18}(全部|所有|完整|批量).{0,10}(列出|导出|展示|提供)",
+        "(show|export|dump|get).{0,18}(id\\s*number|phone\\s*number|home\\s*address|bank\\s*card|personal\\s+data)"
+      ]
+    },
+    {
+      "rule_id": "security_logging_disable",
+      "category": "audit_evasion",
+      "description": "尝试关闭安全检测、审计、告警或追踪机制",
+      "weight": 0.7,
+      "patterns": [
+        "(关闭|禁用|绕过|暂停).{0,12}(安全检测|输入检测|攻击检测|审计|告警|追踪|监控)",
+        "(不要|无需).{0,10}(记录|审计|留痕|告警|追踪).{0,12}(本次|这次|操作|请求)?",
+        "(disable|turn\\s+off|bypass).{0,15}(security\\s+check|audit|logging|monitoring|alerting|tracking)"
+      ]
+    },
+    {
+      "rule_id": "tool_coercion",
+      "category": "unauthorized_access",
+      "description": "强制调用内部、高权限或未授权工具并跳过确认",
+      "weight": 0.68,
+      "patterns": [
+        "(立即|直接|必须|强制).{0,10}(调用|使用|执行).{0,12}(内部|高权限|管理员|敏感).{0,10}(工具|接口|api|函数)",
+        "(调用|使用).{0,15}(read_internal_file|admin_tool|root_tool|internal_[a-z_]+).{0,15}(无需|不需要|跳过).{0,8}(确认|授权|审批)",
+        "(invoke|call|use).{0,15}(internal|admin|privileged).{0,10}(tool|api|function).{0,15}(without|skip).{0,8}(approval|confirmation|authorization)"
+      ]
+    },
+    {
+      "rule_id": "path_traversal_sensitive_read",
+      "category": "sensitive_data_access",
+      "description": "尝试通过路径穿越或系统敏感路径读取受保护文件",
+      "weight": 0.78,
+      "patterns": [
+        "(读取|打开|查看|下载).{0,20}(\\.\\./|\\.\\.\\\\|/etc/passwd|/etc/shadow|windows\\\\system32|\\.ssh[/\\\\]|id_rsa)",
+        "(read|open|show|download).{0,20}(\\.\\./|/etc/passwd|/etc/shadow|\\.ssh/|id_rsa)"
+      ]
+    },
+    {
+      "rule_id": "encoded_payload_request",
+      "category": "jailbreak",
+      "description": "使用编码/混淆承载指令并要求解码、执行或遵循",
+      "weight": 0.72,
+      "patterns": [
+        "(base64|hex|十六进制|unicode转义|url编码|rot13).{0,25}(解码|还原|解析).{0,25}(执行|运行|调用|照做|遵循)",
+        "(decode|deobfuscate|unescape).{0,25}(base64|hex|unicode|url|rot13).{0,25}(execute|run|follow|obey)",
+        "(解码|还原|解析).{0,20}(十六进制|hex|url编码|unicode转义).{0,20}(执行|运行|照做|遵循)"
+      ]
+    },
+    {
+      "rule_id": "retrieval_instruction_override",
+      "category": "indirect_prompt_injection",
+      "description": "网页/文档/RAG内容试图覆盖用户目标或安全指令",
+      "weight": 0.68,
+      "patterns": [
+        "(网页|文档|附件|邮件|知识库|检索片段|rag).{0,35}(停止|忽略|覆盖|替换|取消).{0,15}(用户任务|用户问题|原任务|安全说明|系统规则)",
+        "(网页|文档|附件|邮件|知识库|检索片段|rag).{0,35}(优先级高于|最高优先级|必须遵循|严格执行)",
+        "(webpage|document|attachment|email|retrieval|rag).{0,35}(ignore|override|replace).{0,15}(user\\s+task|system|safety)"
+      ]
+    },
+    {
+      "rule_id": "knowledge_poisoning_instruction",
+      "category": "memory_or_knowledge_poisoning",
+      "description": "尝试将未经验证的高优先级指令写入知识库、记忆或检索源",
+      "weight": 0.68,
+      "patterns": [
+        "(写入|加入|注入|保存到).{0,15}(知识库|向量库|长期记忆|memory|rag).{0,25}(最高优先级|忽略安全|绕过审批|永久生效)",
+        "(poison|insert|store).{0,15}(knowledge\\s*base|vector\\s*db|memory|rag).{0,25}(highest\\s+priority|ignore\\s+safety|bypass)"
+      ]
+    },
+    {
+      "rule_id": "fs_destructive_command",
+      "category": "dangerous_execution",
+      "description": "请求对根目录、用户目录或磁盘执行递归强制删除、格式化等文件系统破坏命令",
+      "weight": 0.86,
+      "patterns": [
+        "\\brm\\s+-[a-z]*r[a-z]*f[a-z]*\\s+(/|~|\\*|[a-z]:[/\\\\])",
+        "\\bdel\\s+/[fsq]",
+        "\\bformat\\s+[a-z]:",
+        "\\brmdir\\s+/s"
+      ]
+    },
+    {
+      "rule_id": "db_destructive_command",
+      "category": "dangerous_execution",
+      "description": "请求执行 DROP DATABASE、DROP TABLE、TRUNCATE TABLE 等破坏性数据库操作",
+      "weight": 0.86,
+      "patterns": [
+        "\\bdrop\\s+(database|table)\\b",
+        "\\btruncate\\s+table\\b"
+      ]
+    },
+    {
+      "rule_id": "git_history_destruction",
+      "category": "dangerous_execution",
+      "description": "请求强制覆盖远端或硬重置本地 Git 历史",
+      "weight": 0.7,
+      "patterns": [
+        "git\\s+push\\s+(-f|--force)",
+        "git\\s+reset\\s+--hard"
+      ]
+    },
+    {
+      "rule_id": "download_then_execute",
+      "category": "dangerous_execution",
+      "description": "请求下载远程内容后直接交给 Shell/解释器执行",
+      "weight": 0.82,
+      "patterns": [
+        "\\b(curl|wget)\\b.{0,80}\\|\\s*(bash|sh|zsh|python)",
+        "\\b(iwr|irm)\\b.{0,80}\\b(iex|invoke-expression)\\b"
+      ]
+    },
+    {
+      "rule_id": "sudo_destructive_command",
+      "category": "dangerous_execution",
+      "description": "请求以 sudo 等提权方式执行破坏性系统操作",
+      "weight": 0.86,
+      "patterns": [
+        "\\bsudo\\b.{0,30}\\b(rm\\s+-|shutdown|reboot|mkfs|dd\\s+if=)",
+        "\\brunas\\b.{0,30}\\b(format|del\\s+/[fsq])"
+      ]
+    },
+    {
+      "rule_id": "permission_loosening",
+      "category": "dangerous_execution",
+      "description": "请求对目录或文件放开为 777 全开放权限",
+      "weight": 0.68,
+      "patterns": [
+        "\\bchmod\\s+(-R\\s+)?777\\b"
+      ]
+    },
+    {
+      "rule_id": "personal_information_request",
+      "category": "sensitive_data_access",
+      "description": "获取、提供、列出或导出手机号码、私人邮箱、身份证号、银行卡号、家庭住址、通讯录等个人隐私信息",
+      "weight": 0.72,
+      "patterns": [
+        "(获取|提供|列出|导出|告诉|发送|读取|查看|收集|查询).{0,18}(手机号码|手机号|私人邮箱|个人邮箱|身份证号|银行卡号|家庭住址|个人联系方式|员工通讯录|内部通讯录|客户名单|个人档案)",
+        "(provide|list|export|tell|send|collect|get|query).{0,18}(phone\\s+number|personal\\s+email|id\\s+number|bank\\s+card|home\\s+address|employee\\s+directory|customer\\s+list|personal\\s+profile)"
+      ]
+    },
+    {
+      "rule_id": "confidential_business_information",
+      "category": "sensitive_data_access",
+      "description": "获取、列出或导出尚未公开/保密的招标控制价、供应商报价、评审意见、内部合同等未公开业务敏感信息",
+      "weight": 0.72,
+      "patterns": [
+        "(获取|提供|列出|导出|透露|读取|查看|发送).{0,18}(尚未公开|未公开|招标控制价|供应商报价|评审意见|内部决策材料|未公开采购信息|内部合同|保密|机密)",
+        "(尚未公开|未公开|招标控制价|供应商报价|评审意见|内部决策材料|未公开采购信息).{0,20}(列出|提供|获取|导出|透露|发送|读取)"
+      ]
+    },
+    {
+      "rule_id": "internal_system_disclosure",
+      "category": "prompt_injection",
+      "description": "告诉、提供、列出或泄露内部管理路径、隐藏接口、管理端点、后台地址等内部系统信息",
+      "weight": 0.72,
+      "patterns": [
+        "(告诉|提供|列出|泄露|展示|透露|给出|调用).{0,18}(内部管理路径|隐藏接口|管理端点|后台地址|内部api|内部服务地址|内部路由|未公开接口|内部接口)",
+        "(internal\\s+route|hidden\\s+endpoint|admin\\s+endpoint|backend\\s+address|internal\\s+api).{0,18}(tell|show|reveal|list|provide|leak)"
+      ]
+    },
+    {
+      "rule_id": "indirect_prompt_injection_control",
+      "category": "indirect_prompt_injection",
+      "description": "文档/网页/Excel/隐藏内容等外部数据中包含要求越权修改、静默执行等控制 Agent 行为的指令",
+      "weight": 0.72,
+      "patterns": [
+        "(隐藏行|隐藏内容|隐藏文字|隐藏单元格|备注|注释|夹带指令|外部数据|检索片段).{0,24}(忽略|覆盖|改为|改成|修改|删除|标记|设为|直接|执行|批准)",
+        "(文档|网页|excel|表格|附件|外部数据|隐藏内容|隐藏行).{0,30}(不要提示用户|不要告诉用户|静默执行|忽略用户|不通知用户|标记为已通过)"
+      ]
+    },
+    {
+      "rule_id": "indirect_prompt_injection_stealth_tampering",
+      "category": "indirect_prompt_injection",
+      "description": "外部内容中出现标记为已通过、修改金额/审批状态、忽略用户、静默执行等明确越权与隐瞒信号",
+      "weight": 0.82,
+      "patterns": [
+        "(标记为已通过|修改金额|修改审批状态|忽略用户任务|忽略用户|静默执行|不要提示用户|不要告诉用户)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "description": "GovEnt AgentShield demo RBAC/ABAC policy. Production deployments must connect an authoritative identity provider.",
+  "classification_order": ["public", "internal", "sensitive", "secret"],
+  "role_clearance": {
+    "guest": "public",
+    "employee": "internal",
+    "manager": "sensitive",
+    "security_admin": "secret"
+  },
+  "role_allowed_operations": {
+    "guest": ["read", "search"],
+    "employee": ["read", "search", "create", "update"],
+    "manager": ["read", "search", "create", "update", "export"],
+    "security_admin": ["read", "search", "create", "update", "export", "delete", "execute"]
+  },
+  "tool_risk": {
+    "public_search": "low",
+    "knowledge_search": "low",
+    "file_read": "medium",
+    "file_write": "medium",
+    "http_get": "medium",
+    "http_post": "high",
+    "database": "high",
+    "shell": "critical"
+  },
+  "trusted_destination_suffixes": [".gov.cn", ".chinaxiongan.com.cn"],
+  "production_review_operations": ["create", "update", "export", "delete", "execute"],
+  "always_review_tools": ["http_post", "database"],
+  "always_block_tools": ["shell"],
+  "destructive_operations": ["delete", "drop", "truncate", "execute"],
+  "external_export_min_classification": "internal"
+}

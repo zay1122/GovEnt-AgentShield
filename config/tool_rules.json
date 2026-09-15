@@ -1,0 +1,170 @@
+{
+  "version": "rules_v1.1.0",
+  "module": "tool_guard",
+  "description": "GovEnt AgentShield Tool Guard 固定基线规则集 v1.1.0；覆盖工具权限、敏感文件访问、系统命令、外部请求、数据外传、凭据暴露、审计规避和破坏性操作。",
+  "freeze_policy": "规则冻结后仅允许修复明确误报/漏报或新增独立验证集证明的缺陷；禁止针对单个 SAMPLE 编号硬编码。",
+  "rules": [
+    {
+      "rule_id": "privileged_tool_name",
+      "category": "unauthorized_tool",
+      "description": "调用 Shell、终端、系统执行或管理员类高权限工具",
+      "weight": 0.45,
+      "patterns": [
+        "\\b(tool_name|tool|name)\\s*[:=]\\s*(shell|terminal|powershell|cmd|subprocess|os\\.system|exec|eval|admin_tool|root_tool)\\b",
+        "(调用|使用|执行).{0,12}(shell|终端|powershell|cmd|管理员工具|高权限工具|root工具)",
+        "\\b(call|invoke|use)\\b.{0,18}\\b(shell|terminal|powershell|cmd|admin\\s*tool|root\\s*tool)\\b"
+      ]
+    },
+    {
+      "rule_id": "dangerous_shell_command",
+      "category": "dangerous_command",
+      "description": "工具参数中包含高危系统命令或任意代码执行行为",
+      "weight": 0.86,
+      "patterns": [
+        "\\brm\\s+-[a-z]*f[a-z]*\\s+(/|~|\\*|[a-z]:[/\\\\])",
+        "\\bdel\\s+/(f|s|q)",
+        "\\bformat\\s+[a-z]:",
+        "\\bshutdown\\s+/(s|r)",
+        "\\b(powershell|cmd\\.exe|bash|sh)\\b.{0,30}\\b(-enc|-encodedcommand|invoke-expression|iex|/c)\\b",
+        "\\bcurl\\b.{0,80}\\|\\s*(bash|sh|powershell)",
+        "(执行|运行).{0,12}(系统命令|shell命令|终端命令|任意代码)",
+        "\\b(eval|exec)\\s*\\("
+      ]
+    },
+    {
+      "rule_id": "destructive_file_operation",
+      "category": "destructive_operation",
+      "description": "请求删除、清空、覆盖、格式化或批量破坏文件、目录、日志或数据库",
+      "weight": 0.8,
+      "patterns": [
+        "(删除|清空|覆盖|格式化|擦除|破坏).{0,20}(目录|文件|磁盘|数据库|日志|备份)",
+        "\\b(operation|action)\\s*[:=]\\s*(delete|remove|wipe|format|truncate|drop|overwrite)\\b",
+        "\\b(drop\\s+(database|table)|truncate\\s+table|delete\\s+from)\\b",
+        "\\b(recursive|force|purge)\\b.{0,20}\\b(delete|remove|wipe)\\b"
+      ]
+    },
+    {
+      "rule_id": "sensitive_secret_file",
+      "category": "sensitive_file_access",
+      "description": "访问环境变量、私钥、凭据、系统口令库或其他敏感密钥文件",
+      "weight": 0.82,
+      "patterns": [
+        "(\\.env|id_rsa|id_dsa|id_ed25519|private[_-]?key|secret[s]?\\.(json|ya?ml|txt)|credentials?\\.(json|ya?ml|txt))",
+        "(/etc/passwd|/etc/shadow|/proc/self/environ|windows[/\\\\]system32[/\\\\]config[/\\\\]sam)",
+        "(kubeconfig|\\.kube[/\\\\]config|aws_credentials|access[_-]?token|api[_-]?key)"
+      ]
+    },
+    {
+      "rule_id": "sensitive_internal_file",
+      "category": "sensitive_file_access",
+      "description": "访问内部、机密、保密、受限或批量个人信息文件",
+      "weight": 0.66,
+      "patterns": [
+        "(读取|打开|下载|复制|导出|上传).{0,18}(内部|机密|保密|敏感|受限).{0,12}(文件|文档|表格|合同|档案|数据)",
+        "(confidential|secret|private|internal|restricted).{0,18}\\.(xlsx|xls|csv|pdf|docx|txt|json|zip)",
+        "(身份证号|手机号|银行卡号|家庭住址|员工档案|客户名单).{0,18}(文件|表格|数据|导出|下载)"
+      ]
+    },
+    {
+      "rule_id": "credential_exposure",
+      "category": "credential_access",
+      "description": "工具调用试图读取、导出或传输密码、令牌、Cookie、密钥等凭据",
+      "weight": 0.84,
+      "patterns": [
+        "(读取|查看|导出|获取|上传|发送).{0,18}(密码|口令|密钥|令牌|token|api\\s*key|cookie|session|secret)",
+        "\\b(password|passwd|credential|token|api[_-]?key|secret[_-]?key|client[_-]?secret|cookie|session[_-]?token)\\b",
+        "\\b(show|read|dump|export|send|upload)\\b.{0,20}\\b(password|credential|token|secret|cookie)\\b"
+      ]
+    },
+    {
+      "rule_id": "path_traversal_read",
+      "category": "sensitive_file_access",
+      "description": "通过路径穿越或系统敏感路径读取受保护文件",
+      "weight": 0.78,
+      "patterns": [
+        "(\\.\\./|\\.\\.\\\\)",
+        "(读取|打开|下载|查看).{0,20}(\\.\\./|\\.\\.\\\\|/etc/|/root/|/home/[^\\s]+/\\.ssh|c:[/\\\\]windows)",
+        "\\b(read|open|download|show)\\b.{0,20}(\\.\\./|/etc/|/root/|\\.ssh/|c:[/\\\\]windows)"
+      ]
+    },
+    {
+      "rule_id": "external_http_request",
+      "category": "external_request",
+      "description": "工具调用包含外部 HTTP 请求、Webhook、公网地址或邮件发送目标",
+      "weight": 0.58,
+      "patterns": [
+        "https?://[^\\s\"'<>]+",
+        "\\b(webhook|http_post|http_get|requests\\.(get|post)|curl|wget|send_email|smtp)\\b",
+        "[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}",
+        "(外部接口|外部服务器|公网地址|私人邮箱|第三方平台|个人网盘)"
+      ]
+    },
+    {
+      "rule_id": "private_data_exfiltration",
+      "category": "data_exfiltration",
+      "description": "将内部数据、文件、凭据或日志发送到外部地址",
+      "weight": 0.8,
+      "patterns": [
+        "(发送|上传|转发|外传|同步).{0,22}(内部数据|敏感数据|文件|日志|密钥|token|cookie|合同|档案).{0,24}(https?://|webhook|外部|邮箱|接口)",
+        "(把|将).{0,24}(内部|机密|保密|敏感|受限).{0,20}(发送|上传|转发|外传).{0,24}(https?://|webhook|邮箱|外部)",
+        "\\b(send|upload|post|forward|exfiltrate)\\b.{0,24}\\b(data|file|log|token|cookie|credential|secret)\\b.{0,24}\\b(http|webhook|email|external)\\b"
+      ]
+    },
+    {
+      "rule_id": "network_scanning",
+      "category": "external_request",
+      "description": "工具调用包含端口扫描、批量探测或网络枚举行为",
+      "weight": 0.62,
+      "patterns": [
+        "\\b(nmap|masscan|rustscan|zmap)\\b",
+        "(端口扫描|批量探测|资产扫描|子域名爆破|目录爆破)",
+        "\\b(port\\s*scan|network\\s*scan|subdomain\\s*bruteforce|directory\\s*bruteforce)\\b"
+      ]
+    },
+    {
+      "rule_id": "permission_bypass",
+      "category": "permission_bypass",
+      "description": "请求跳过审批、授权、二次确认或工具权限校验",
+      "weight": 0.68,
+      "patterns": [
+        "(跳过|绕过|忽略|关闭).{0,12}(审批|授权|确认|权限校验|安全检查|人工审核)",
+        "(无需|不需要).{0,8}(审批|授权|确认|二次确认|人工审核).{0,18}(调用|执行|读取|删除|发送)",
+        "\\b(skip|bypass|disable)\\b.{0,16}\\b(approval|authorization|confirmation|permission|security\\s*check)\\b"
+      ]
+    },
+    {
+      "rule_id": "audit_evasion",
+      "category": "audit_evasion",
+      "description": "试图关闭、删除或规避工具调用审计日志",
+      "weight": 0.82,
+      "patterns": [
+        "(关闭|禁用|删除|清空|擦除).{0,12}(审计日志|操作日志|安全日志|日志记录|调用记录)",
+        "(不要|无需|避免).{0,10}(记录|审计|留痕|告警|追踪).{0,12}(本次|工具|调用|操作)?",
+        "\\b(disable|delete|clear|erase|bypass)\\b.{0,16}\\b(audit|log|logging|trace|monitoring)\\b"
+      ]
+    },
+    {
+      "rule_id": "database_admin_operation",
+      "category": "unauthorized_tool",
+      "description": "执行数据库管理、批量修改或危险 SQL 操作",
+      "weight": 0.82,
+      "patterns": [
+        "\\b(drop\\s+database|drop\\s+table|truncate\\s+table|delete\\s+from|update\\s+.+\\s+set)\\b",
+        "(数据库|数据表).{0,12}(删除|清空|覆盖|批量修改|改成|设为)",
+        "\\b(database_admin|sql_exec|db_shell|mysql\\s+-e|psql\\s+-c)\\b"
+      ]
+    },
+    {
+      "rule_id": "unsafe_python_execution",
+      "category": "dangerous_command",
+      "description": "Python 工具调用中包含 eval、exec、subprocess shell 执行等危险 API",
+      "weight": 0.82,
+      "patterns": [
+        "\\b(eval|exec)\\s*\\(",
+        "\\b(os\\.system|subprocess\\.(popen|run|call))\\s*\\(",
+        "shell\\s*=\\s*true",
+        "\\b(importlib|pickle\\.loads|marshal\\.loads)\\b.{0,30}\\("
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "cases": 120,
+  "canonical_cases": 15,
+  "action_accuracy": 0.9833,
+  "avg_latency_ms": 0.4262,
+  "variant_accuracy": {
+    "argument_noise": 1.0,
+    "base64_target": 0.9333,
+    "nested_args": 1.0,
+    "plain": 1.0,
+    "reordered": 1.0,
+    "target_noise": 1.0,
+    "upper_tool": 1.0,
+    "url_target": 0.9333
+  },
+  "failed_expectations": [
+    {
+      "case_id": "TOOL-008",
+      "variant": "url_target",
+      "expected_action": "warn",
+      "actual_action": "review",
+      "correct": false,
+      "latency_ms": 0.4725,
+      "matched_rules": "external_http_request"
+    },
+    {
+      "case_id": "TOOL-008",
+      "variant": "base64_target",
+      "expected_action": "warn",
+      "actual_action": "review",
+      "correct": false,
+      "latency_ms": 0.3927,
+      "matched_rules": "external_http_request"
+    }
+  ],
+  "limitation": "Template-derived robustness set; not an independent blind benchmark."
+}

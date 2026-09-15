@@ -1,0 +1,16 @@
+{
+  "dataset_version": "curated_skill_cases_v1.0",
+  "description": "融合自简单版工程的10个人工编写Skill回归样例；用于工程回归，不宣称为外部独立盲测集。",
+  "cases": {
+    "skill_01.py": "allow",
+    "skill_02.py": "warn",
+    "skill_03.py": "warn",
+    "skill_04.py": "block",
+    "skill_05.py": "block",
+    "skill_06.py": "block",
+    "skill_07.py": "review",
+    "skill_08.py": "review",
+    "skill_09.py": "allow",
+    "skill_10.py": "allow"
+  }
+}

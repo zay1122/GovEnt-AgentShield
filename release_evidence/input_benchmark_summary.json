@@ -1,0 +1,146 @@
+{
+  "dataset": "/workspace/scratch/3f9fdd72240d/project_v3/GovEnt-AgentShield/data/evaluation/input_benchmark.jsonl",
+  "cases": 320,
+  "systems": {
+    "keyword_only_ablation": {
+      "metrics": {
+        "development": {
+          "cases": 128,
+          "tp": 41,
+          "tn": 52,
+          "fp": 12,
+          "fn": 23,
+          "accuracy": 0.7266,
+          "precision": 0.7736,
+          "recall": 0.6406,
+          "f1": 0.7009,
+          "avg_latency_ms": 0.0023,
+          "p95_latency_ms": 0.0065
+        },
+        "validation": {
+          "cases": 96,
+          "tp": 25,
+          "tn": 48,
+          "fp": 0,
+          "fn": 23,
+          "accuracy": 0.7604,
+          "precision": 1.0,
+          "recall": 0.5208,
+          "f1": 0.6849,
+          "avg_latency_ms": 0.0024,
+          "p95_latency_ms": 0.0068
+        },
+        "holdout": {
+          "cases": 96,
+          "tp": 7,
+          "tn": 42,
+          "fp": 6,
+          "fn": 41,
+          "accuracy": 0.5104,
+          "precision": 0.5385,
+          "recall": 0.1458,
+          "f1": 0.2295,
+          "avg_latency_ms": 0.0024,
+          "p95_latency_ms": 0.0062
+        },
+        "overall": {
+          "cases": 320,
+          "tp": 73,
+          "tn": 142,
+          "fp": 18,
+          "fn": 87,
+          "accuracy": 0.6719,
+          "precision": 0.8022,
+          "recall": 0.4562,
+          "f1": 0.5817,
+          "avg_latency_ms": 0.0024,
+          "p95_latency_ms": 0.0064
+        }
+      },
+      "robustness": {
+        "attack_family_count": 20,
+        "mean_variant_detection_rate": 0.4562,
+        "variant_detection_rate": {
+          "base64": 0.0,
+          "context_noise": 0.6,
+          "line_break": 0.6,
+          "plain": 0.6,
+          "polite": 0.6,
+          "spaced": 0.55,
+          "url_encoded": 0.1,
+          "wrapped": 0.6
+        }
+      }
+    },
+    "input_guard_full": {
+      "metrics": {
+        "development": {
+          "cases": 128,
+          "tp": 64,
+          "tn": 62,
+          "fp": 2,
+          "fn": 0,
+          "accuracy": 0.9844,
+          "precision": 0.9697,
+          "recall": 1.0,
+          "f1": 0.9846,
+          "avg_latency_ms": 0.4537,
+          "p95_latency_ms": 0.7403
+        },
+        "validation": {
+          "cases": 96,
+          "tp": 46,
+          "tn": 48,
+          "fp": 0,
+          "fn": 2,
+          "accuracy": 0.9792,
+          "precision": 1.0,
+          "recall": 0.9583,
+          "f1": 0.9787,
+          "avg_latency_ms": 0.4283,
+          "p95_latency_ms": 0.7361
+        },
+        "holdout": {
+          "cases": 96,
+          "tp": 45,
+          "tn": 40,
+          "fp": 8,
+          "fn": 3,
+          "accuracy": 0.8854,
+          "precision": 0.8491,
+          "recall": 0.9375,
+          "f1": 0.8911,
+          "avg_latency_ms": 0.4082,
+          "p95_latency_ms": 0.6437
+        },
+        "overall": {
+          "cases": 320,
+          "tp": 155,
+          "tn": 150,
+          "fp": 10,
+          "fn": 5,
+          "accuracy": 0.9531,
+          "precision": 0.9394,
+          "recall": 0.9688,
+          "f1": 0.9538,
+          "avg_latency_ms": 0.4324,
+          "p95_latency_ms": 0.709
+        }
+      },
+      "robustness": {
+        "attack_family_count": 20,
+        "mean_variant_detection_rate": 0.9688,
+        "variant_detection_rate": {
+          "base64": 0.85,
+          "context_noise": 1.0,
+          "line_break": 1.0,
+          "plain": 1.0,
+          "polite": 1.0,
+          "spaced": 1.0,
+          "url_encoded": 0.9,
+          "wrapped": 1.0
+        }
+      }
+    }
+  }
+}

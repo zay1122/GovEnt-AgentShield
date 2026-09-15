@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0-demo",
+  "mode": "local_demo_hashes",
+  "warning": "Replace this file or set AGENTSHIELD_AUTH_FILE before any non-local deployment.",
+  "identities": [
+    {
+      "user_id": "demo_employee",
+      "role": "employee",
+      "department": "政务服务",
+      "token_sha256": "ca60303252471d8e34a359c194d005ca7735a31ea5654cccbb7815108b3f1dc2"
+    },
+    {
+      "user_id": "demo_manager",
+      "role": "manager",
+      "department": "业务管理",
+      "token_sha256": "d0460297048753190abaad624ebd6e7b1a705706d94297423df99ef20d95ef11"
+    },
+    {
+      "user_id": "demo_security_admin",
+      "role": "security_admin",
+      "department": "安全运营",
+      "token_sha256": "7365fb791cd885b33793a8e32ceaf858ffaf640569212d4a856640d5d9ef35dc"
+    }
+  ]
+}

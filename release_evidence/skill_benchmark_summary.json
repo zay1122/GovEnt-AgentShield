@@ -1,0 +1,7 @@
+{
+  "cases": 100,
+  "accuracy": 1.0,
+  "avg_latency_ms": 0.0457,
+  "failed_expectations": [],
+  "limitation": "Generated API-call variants; static analysis and not an external malware corpus."
+}

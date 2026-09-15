@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-09-04T14:58:52+00:00",
+  "approval": {
+    "total": 3,
+    "status": {
+      "consumed": 3
+    }
+  },
+  "task_chain": {
+    "sessions": 10,
+    "events": 26,
+    "decision": {
+      "allow": 26
+    },
+    "matched_rules": {}
+  },
+  "audit": {
+    "valid": true,
+    "entries": 421,
+    "head_hash": "5c79821dca3f110f03bd85138ce4815a48330956a19d49ba254e4e9b6e8af5bc",
+    "stage_counts": {
+      "input_guard": 112,
+      "multisource_guard": 44,
+      "final": 112,
+      "input_blocked": 71,
+      "supply_chain_guard": 9,
+      "tool_guard": 26,
+      "execution_dry_run": 1,
+      "skill_blocked": 8,
+      "execution_completed": 18,
+      "execution_blocked": 7,
+      "runtime_no_tool": 7,
+      "approval_created": 3,
+      "approval_decided": 3
+    }
+  }
+}

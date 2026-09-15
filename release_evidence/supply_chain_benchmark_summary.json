@@ -1,0 +1,94 @@
+{
+  "dataset": "data/evaluation/supply_chain_expected.json",
+  "dataset_scope": "human-authored engineering regression set, not an external blind test",
+  "case_count": 10,
+  "exact_action_accuracy": 1.0,
+  "risky_case_recall": 1.0,
+  "safe_case_specificity": 1.0,
+  "rows": [
+    {
+      "case": "skill_01.py",
+      "expected": "allow",
+      "actual": "allow",
+      "correct": true,
+      "rules": []
+    },
+    {
+      "case": "skill_02.py",
+      "expected": "warn",
+      "actual": "warn",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_03.py",
+      "expected": "warn",
+      "actual": "warn",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_04.py",
+      "expected": "block",
+      "actual": "block",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_05.py",
+      "expected": "block",
+      "actual": "block",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_06.py",
+      "expected": "block",
+      "actual": "block",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_07.py",
+      "expected": "review",
+      "actual": "review",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_08.py",
+      "expected": "review",
+      "actual": "review",
+      "correct": true,
+      "rules": [
+        "dangerous_python_behavior"
+      ]
+    },
+    {
+      "case": "skill_09.py",
+      "expected": "allow",
+      "actual": "allow",
+      "correct": true,
+      "rules": []
+    },
+    {
+      "case": "skill_10.py",
+      "expected": "allow",
+      "actual": "allow",
+      "correct": true,
+      "rules": []
+    }
+  ]
+}

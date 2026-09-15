@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# Virtual environments
+.venv/
+.venv-*/
+venv/
+env/
+
+# Secrets
+.env
+*.key
+*.pem
+
+# Temporary files
+*.tmp
+*.log
+
+# Excel temporary files
+~$*.xlsx
+
+# Runtime history：Input Guard / Tool Guard 各自独立历史目录，
+# 分别由下方 output/input_guard/ 与 output/tool_guard/ 规则覆盖
+
+# Local caches
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tmp_tests/
+
+# OS
+.DS_Store
+Thumbs.db
+# Input Guard runtime files
+# All runtime evidence is generated locally. Curated competition evidence should
+# be copied to a dedicated release bundle, not mixed with development history.
+output/
+skill_result.json
